@@ -7,6 +7,8 @@ const transactionRoutes = require("./src/routes/transactionRoutes");
 const categoryRoutes = require("./src/routes/categoryRoutes");
 const budgetRoutes = require("./src/routes/budgetRoutes");
 const analyticsRoutes = require("./src/routes/analyticsRoutes");
+const settingsRoutes = require("./src/routes/settingsRoutes");
+const reportBuilderRoutes = require("./src/routes/reportBuilderRoutes");
 
 dotenv.config();
 
@@ -29,7 +31,7 @@ app.use(
     credentials: true,
   })
 );
-app.use(express.json({ limit: "1mb" }));
+app.use(express.json({ limit: "5mb" }));
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", app: "Expenser API" });
@@ -40,6 +42,8 @@ app.use("/api/transactions", transactionRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/api/budget", budgetRoutes);
 app.use("/api/analytics", analyticsRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/reports/builder", reportBuilderRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "API route not found" });
@@ -48,15 +52,11 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.error(err);
   const status = err.status || 500;
-  res.status(status).json({
-    message: err.message || "Something went wrong",
-  });
+  res.status(status).json({ message: err.message || "Something went wrong" });
 });
 
 async function startServer() {
-  const mongoUri =
-    process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/expensetracker";
-
+  const mongoUri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/expensetracker";
   await mongoose.connect(mongoUri);
   app.listen(PORT, () => {
     console.log(`API running on http://localhost:${PORT}`);

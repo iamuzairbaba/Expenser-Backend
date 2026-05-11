@@ -15,6 +15,8 @@ function buildFilters(userId, query) {
     filters.$or = [
       { notes: { $regex: query.search, $options: "i" } },
       { description: { $regex: query.search, $options: "i" } },
+      { merchant: { $regex: query.search, $options: "i" } },
+      { tags: { $regex: query.search, $options: "i" } },
     ];
   }
   return filters;
@@ -81,6 +83,7 @@ async function createTransaction(req, res, next) {
     }
 
     const categoryId = await resolveCategory(req.user._id, category, type);
+    const { merchant, tags } = req.body;
     const transaction = await Transaction.create({
       user: req.user._id,
       type,
@@ -89,6 +92,8 @@ async function createTransaction(req, res, next) {
       date: date ? new Date(date) : new Date(),
       description: description || notes || "",
       notes: notes || description || "",
+      merchant: merchant || "",
+      tags: Array.isArray(tags) ? tags : [],
       recurring: {
         enabled: Boolean(recurring?.enabled),
         frequency: recurring?.enabled ? recurring.frequency || "monthly" : "none",

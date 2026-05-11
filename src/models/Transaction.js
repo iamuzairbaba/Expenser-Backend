@@ -39,6 +39,15 @@ const transactionSchema = new mongoose.Schema(
       trim: true,
       default: "",
     },
+    merchant: {
+      type: String,
+      trim: true,
+      default: "",
+    },
+    tags: {
+      type: [String],
+      default: [],
+    },
     recurring: {
       enabled: { type: Boolean, default: false },
       frequency: {
