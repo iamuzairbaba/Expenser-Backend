@@ -5,7 +5,9 @@ async function getSettings(req, res, next) {
   try {
     const user = await User.findById(req.user._id).select("-password");
     if (!user) return res.status(404).json({ message: "User not found" });
-    res.json({ user });
+    // Re-use the same formatUser logic so missing fields get safe defaults
+    const { formatUser } = require("./authController");
+    res.json({ user: formatUser(user) });
   } catch (err) {
     next(err);
   }
@@ -20,7 +22,8 @@ async function updateProfile(req, res, next) {
     if (avatar !== undefined) updates.avatar = avatar;
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true, runValidators: true }).select("-password");
-    res.json({ user, message: "Profile updated" });
+    const { formatUser } = require("./authController");
+    res.json({ user: formatUser(user), message: "Profile updated" });
   } catch (err) {
     next(err);
   }
@@ -39,7 +42,8 @@ async function updatePreferences(req, res, next) {
     });
 
     const user = await User.findByIdAndUpdate(req.user._id, prefUpdates, { new: true }).select("-password");
-    res.json({ user, message: "Preferences updated" });
+    const { formatUser } = require("./authController");
+    res.json({ user: formatUser(user), message: "Preferences updated" });
   } catch (err) {
     next(err);
   }
@@ -57,7 +61,8 @@ async function updateNotifications(req, res, next) {
     });
 
     const user = await User.findByIdAndUpdate(req.user._id, notifUpdates, { new: true }).select("-password");
-    res.json({ user, message: "Notifications updated" });
+    const { formatUser } = require("./authController");
+    res.json({ user: formatUser(user), message: "Notifications updated" });
   } catch (err) {
     next(err);
   }
@@ -108,7 +113,8 @@ async function completeOnboarding(req, res, next) {
     }
 
     const user = await User.findByIdAndUpdate(req.user._id, updates, { new: true }).select("-password");
-    res.json({ user, message: "Onboarding completed" });
+    const { formatUser } = require("./authController");
+    res.json({ user: formatUser(user), message: "Onboarding completed" });
   } catch (err) {
     next(err);
   }
@@ -125,7 +131,8 @@ async function addGoal(req, res, next) {
       { $push: { goals: { title, type: type || "custom", targetAmount, deadline, color: color || "#0ea5e9", icon: icon || "🎯" } } },
       { new: true }
     ).select("-password");
-    res.json({ user, message: "Goal added" });
+    const { formatUser: fmt } = require("./authController");
+    res.json({ user: fmt(user), message: "Goal added" });
   } catch (err) {
     next(err);
   }

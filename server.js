@@ -9,6 +9,7 @@ const budgetRoutes = require("./src/routes/budgetRoutes");
 const analyticsRoutes = require("./src/routes/analyticsRoutes");
 const settingsRoutes = require("./src/routes/settingsRoutes");
 const reportBuilderRoutes = require("./src/routes/reportBuilderRoutes");
+const subscriptionRoutes = require("./src/routes/subscriptionRoutes");
 
 dotenv.config();
 
@@ -44,6 +45,7 @@ app.use("/api/budget", budgetRoutes);
 app.use("/api/analytics", analyticsRoutes);
 app.use("/api/settings", settingsRoutes);
 app.use("/api/reports/builder", reportBuilderRoutes);
+app.use("/api/subscription", subscriptionRoutes);
 
 app.use((req, res) => {
   res.status(404).json({ message: "API route not found" });

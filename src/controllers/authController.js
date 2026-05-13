@@ -26,18 +26,67 @@ async function recordLogin(user, req) {
   });
 }
 
+/**
+ * formatUser — always returns safe defaults for every field.
+ * Existing users missing new fields (preferences, plan, etc.) get
+ * sensible defaults instead of undefined/null, preventing frontend crashes.
+ *
+ * KEY: onboardingCompleted defaults to TRUE for existing users
+ * (anyone who already has transactions/categories should skip onboarding).
+ * New signups get false via the schema default.
+ */
 function formatUser(user) {
+  // If the field literally doesn't exist on the document (old user),
+  // treat them as having completed onboarding so they aren't forced through it.
+  const onboardingCompleted =
+    user.onboardingCompleted === undefined ? true : Boolean(user.onboardingCompleted);
+
+  const preferences = {
+    currency: "USD",
+    monthStartDate: 1,
+    monthlyIncome: 0,
+    monthlySavingsGoal: 0,
+    theme: "dark",
+    accentColor: "#0ea5e9",
+    compactMode: false,
+    animationsEnabled: true,
+    defaultTransactionType: "expense",
+    defaultDashboardView: "overview",
+    budgetAlertThreshold: 80,
+    ...(user.preferences ? user.preferences.toObject?.() ?? user.preferences : {}),
+  };
+
+  const notifications = {
+    budgetAlerts: true,
+    monthlySummary: true,
+    weeklyReports: false,
+    goalReminders: true,
+    subscriptionReminders: true,
+    emailNotifications: false,
+    pushNotifications: false,
+    ...(user.notifications ? user.notifications.toObject?.() ?? user.notifications : {}),
+  };
+
+  const plan = {
+    tier: "free",
+    razorpaySubscriptionId: "",
+    validUntil: null,
+    ...(user.plan ? user.plan.toObject?.() ?? user.plan : {}),
+  };
+
   return {
     id: user._id,
     name: user.name,
     email: user.email,
-    provider: user.provider,
+    provider: user.provider || "local",
     avatar: user.avatar || "",
     phone: user.phone || "",
-    onboardingCompleted: user.onboardingCompleted || false,
-    preferences: user.preferences || {},
-    notifications: user.notifications || {},
-    goals: user.goals || [],
+    onboardingCompleted,
+    preferences,
+    notifications,
+    goals: Array.isArray(user.goals) ? user.goals : [],
+    plan,
+    loginHistory: Array.isArray(user.loginHistory) ? user.loginHistory.slice(-5) : [],
   };
 }
 
@@ -66,6 +115,7 @@ async function signup(req, res, next) {
     }
 
     const hashedPassword = await bcrypt.hash(password, 12);
+    // New users start with onboardingCompleted: false (schema default)
     const user = await User.create({ name, email, password: hashedPassword, provider: "local" });
     await recordLogin(user, req);
     await sendAuthResponse(res, user, req);
@@ -118,7 +168,12 @@ async function googleLogin(req, res, next) {
 
     let user = await User.findOne({ email: payload.email });
     if (!user) {
-      user = await User.create({ name: payload.name || payload.email, email: payload.email, provider: "google", googleId: payload.sub });
+      user = await User.create({
+        name: payload.name || payload.email,
+        email: payload.email,
+        provider: "google",
+        googleId: payload.sub,
+      });
     } else if (!user.googleId) {
       user.googleId = payload.sub;
       user.provider = user.provider || "google";

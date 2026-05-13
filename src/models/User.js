@@ -44,6 +44,11 @@ const userSchema = new mongoose.Schema(
         createdAt: { type: Date, default: Date.now },
       },
     ],
+    plan: {
+      tier: { type: String, enum: ["free", "tracker", "pro"], default: "free" },
+      razorpaySubscriptionId: { type: String, default: "" },
+      validUntil: { type: Date, default: null },
+    },
     loginHistory: [
       {
         timestamp: { type: Date, default: Date.now },

@@ -6,13 +6,14 @@ const {
   deleteCategory,
 } = require("../controllers/categoryController");
 const protect = require("../middleware/authMiddleware");
+const requirePlan = require("../middleware/planMiddleware");
 
 const router = express.Router();
 
 router.use(protect);
 router.get("/", listCategories);
-router.post("/", createCategory);
-router.put("/:id", updateCategory);
-router.delete("/:id", deleteCategory);
+router.post("/", requirePlan("tracker"), createCategory);
+router.put("/:id", requirePlan("tracker"), updateCategory);
+router.delete("/:id", requirePlan("tracker"), deleteCategory);
 
 module.exports = router;
