@@ -193,4 +193,4 @@ async function me(req, res) {
   res.json({ user: formatUser(user) });
 }
 
-module.exports = { signup, login, googleLogin, me };
+module.exports = { signup, login, googleLogin, me, formatUser };
